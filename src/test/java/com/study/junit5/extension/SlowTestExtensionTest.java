@@ -1,6 +1,7 @@
 /*
  *  Extension 을 사용하는 방법
  *  1. 테스트 클래스에 @ExtendWith() 애노테이션을 사용해서 어떤 extension 을 사용할 것인지 선언
+ *      여러개를 쓰는 것도 OK
  *  2. 필드에 extension 을 정의하는 방법 → @RegisterExtension
  *      1번 방법을 사용하면 extension 인스턴스를 기본 생성자로 만들기 때문에 커스터마이징 할 수 없다
  *      @RegisterExtension 을 사용할 때는 static 으로 정의해야 된다
