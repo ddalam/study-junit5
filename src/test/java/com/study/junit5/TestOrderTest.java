@@ -14,7 +14,7 @@
  *  3. Random
  */
 
-package com.study.junit5.testInstance;
+package com.study.junit5;
 
 import org.junit.jupiter.api.*;
 

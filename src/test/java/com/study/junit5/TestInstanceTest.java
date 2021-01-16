@@ -9,7 +9,7 @@
  * @TestInstance(TestInstance.Lifecycle.PER_CLASS)
  */
 
-package com.study.junit5.testInstance;
+package com.study.junit5;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
