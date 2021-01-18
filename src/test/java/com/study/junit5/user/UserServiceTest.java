@@ -2,7 +2,7 @@
  * UserService 를 생성하려면 UserRepository 의 구현체가 필요한데 현재 UserRepository 인터페이스만 있고, 구현체가 만들어지지 않은 상태라면
  * 없는 것들을 mocking...
  *
- * Mock 객체를 생성하는 방법
+ * Mock 객체를 생성하는 방법 → testCreateMock() 참고
  *  1. Mockito.mock() 메서드 사용
  *      UserRepository userRepository = mock(UserRepository.class);
  *  2. @Mock 애노테이션을 사용
@@ -18,8 +18,9 @@
  *      - Primitive 타입은 기본값을 가짐
  * 2. Mock 객체가 기본 행동이 아닌 다른 행동을 하도록 할 때
  *      - 특정 매개변수를 받은 경우 특정한 값을 리턴하거나 예외를 던지도록
- *          when(userRepository.findById(1L)).thenReturn(Optional.of(user)); → 매개변수로 1L 을 받았을 때
- *          when(userRepository.findById(1L)).thenReturn(Optional.of(user)); → 매개변수로 아무 값이나 받았을 때
+ *          - 메서드가 리턴하는게 있을 때 → testStubbingCase1() 참고
+ *          - void 메서드의 경우 → testStubbingCase2() 참고
+ *          - 메서드가 동일한 매개변수로 호출되더라도 호출되는 순서에 따라 다르게 행동하도록 → testStubbingCase3() 참고
  */
 
 package com.study.junit5.user;
@@ -31,8 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,25 +43,83 @@ class UserServiceTest {
 //    UserRepository userRepository;
 
     @Test
-    void createUserService(@Mock UserRepository userRepository) {
+    void testCreateMock(@Mock UserRepository userRepository) {
 
         // mock 메서드에 원하는 클래스를 넣어 가짜 객체를 생성할 수 있다
 //        UserRepository userRepository = mock(UserRepository.class);
 
         UserService userService = new UserService(userRepository);
-//        assertNotNull(userService);
+        assertNotNull(userService);
+    }
+
+
+    @Test
+    void testStubbingCase1() {
+        UserService userService = mock(UserService.class);
 
         User user = new User();
         user.setId(1L);
         user.setEmail("test@email.com");
 
-        // Stubbing : when() 메서드의 매겨변수가 호출이 되면 → 그러면 user 를 리턴해라
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
-        // findUser 메서드에서 사용하는 userRepository 는 mock 객체이고, findById 는 1L 로 호출이 되면 Optional 로 감싸진 user 를 리턴하도록 정해놓았기 때문에 ( stubbing )
-        // findUser 메서드를 호출했을 때 userRepository.findById 가 리턴한 값은 user 가 된다
+        // 매개변수로 1L 을 받았을 때 user 를 리턴
+        when(userService.findUser(1L)).thenReturn(user);
         User foundUser = userService.findUser(1L);
-
         assertEquals(user.getEmail(), foundUser.getEmail());
+
+        // 매개변수로 아무 값이나 받았을 때 user 를 리턴
+        when(userService.findUser(any())).thenReturn(user);
+        User foundUser2 = userService.findUser(2L);
+        assertEquals(user.getEmail(), foundUser2.getEmail());
+
+        // 매개변수로 1L 을 받았을 때 예외를 리턴
+        when(userService.findUser(1L)).thenThrow(new RuntimeException());
+        assertThrows(RuntimeException.class, () -> {
+            userService.findUser(1L);
+        });
+    }
+
+
+    @Test
+    void testStubbingCase2() {
+        UserService userService = mock(UserService.class);
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@email.com");
+
+        // 1L 일 때는 예외를 던지지만 2L 로 일 때는 예외가 발생하지 않음
+        doThrow(new IllegalArgumentException()).when(userService).checkUser(1L);
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.checkUser(1L);
+        });
+
+        userService.checkUser(2L);
+    }
+
+
+    @Test
+    void testStubbingCase3() {
+        UserRepository userRepository = mock(UserRepository.class);
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@email.com");
+
+        when(userRepository.findById(any()))    // 어떤 파라미터로 호출이 되던지
+                .thenReturn(Optional.of(user))  // 처음 호출할 때는 user 를 리턴하고
+                .thenThrow(new RuntimeException()) // 두번째 호출할 때는 예외를 리턴
+                .thenReturn(Optional.empty());   // 세번째 호출할 때는 비어있는 값을 리턴
+
+        // 처음 호출할 때
+        Optional<User> foundUser = userRepository.findById(1L);
+        assertEquals(user.getEmail(), foundUser.get().getEmail());
+
+        // 두번째 호출할 때
+        assertThrows(RuntimeException.class, () -> {
+            userRepository.findById(2L);
+        });
+
+        // 세번째 호출할 때
+        assertEquals(Optional.empty(), userRepository.findById(3L));
     }
 }

@@ -21,4 +21,8 @@ public class UserService {
         User user = new User();
         return userRepository.save(user);
     }
+
+    public void checkUser(Long id) {
+        userRepository.findById(id);
+    }
 }
