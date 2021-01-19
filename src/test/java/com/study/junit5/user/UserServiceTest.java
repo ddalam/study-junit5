@@ -23,13 +23,16 @@
  *          - 메서드가 동일한 매개변수로 호출되더라도 호출되는 순서에 따라 다르게 행동하도록 → testStubbingCase3() 참고
  *
  * Mock 객체가 어떻게 사용이 됐는지 확인
- *  1. 특정 메서드가 특정 파라미터로 최소 한번은 호출되었는지 확인. 호출되지 않았다면 에러 - testVerifyMockCase1() 참고
+ *  1. 특정 메서드가 특정 파라미터로 호출되었는지 확인할 때 - testVerifyMockCase1() 참고
+ *  2. 어떤 순서로 메서드가 호출되었는지 확인할 때 - testVerifyMockCase2() 참고
+ *  3. Mock 객체가 사용되지 않았는지 확인 - testVerifyMockCase3() 참고
  */
 
 package com.study.junit5.user;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -127,12 +130,36 @@ class UserServiceTest {
     void testVerifyMockCase1() {
         UserService userService = mock(UserService.class);
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@email.com");
+        userService.checkUser(1L);
 
-        when(userService.findUser(1L)).thenReturn(user);
-
+        // checkUser 메서드가 1L 을 매개변수로 1번 호출이 되었어야 한다
         verify(userService, times(1)).checkUser(1L);
+        // checkUser 메서드가 1L 을 매개변수로 1번 호출되어야 하는데, 2번 호출되었는지 확인해서 테스트 실패
+//        verify(userService, times(2)).checkUser(1L);
+        // findUser 메서드가 어떤 값을 매개변수로도 한번도 호출되지 않았어야 한다
+        verify(userService, never()).findUser(any());
+    }
+
+    @Test
+    void testVerifyMockCase2() {
+        UserService userService = mock(UserService.class);
+
+        userService.checkUser(1L);
+        userService.findUser(1L);
+
+        InOrder inOrder = inOrder(userService);
+        // 아래 두 라인의 순서를 바꾸면 테스트 실패
+        inOrder.verify(userService).checkUser(1L);
+        inOrder.verify(userService).findUser(1L);
+    }
+
+    @Test
+    void testVerifyMockCase3() {
+        UserService userService = mock(UserService.class);
+        UserRepository userRepository = mock(UserRepository.class);
+
+        userRepository.findById(1L);
+
+        verifyNoMoreInteractions(userService);
     }
 }
