@@ -26,6 +26,19 @@
  *  1. 특정 메서드가 특정 파라미터로 호출되었는지 확인할 때 - testVerifyMockCase1() 참고
  *  2. 어떤 순서로 메서드가 호출되었는지 확인할 때 - testVerifyMockCase2() 참고
  *  3. Mock 객체가 사용되지 않았는지 확인 - testVerifyMockCase3() 참고
+ *
+ * Mockito BDD
+ * - BDD : Behavior-driven Development
+ * - BDD 에 따라 테스트 행동을 정의할 때 행동에 대한 스팩
+ *      1. Title : 행동의 이름
+ *      2. Narrative : 행동에 대한 설명 구성 방법
+ *          - As s : 역할로
+ *          - I want : ~ 하고싶다면
+ *          - so that : ~ 할 수 있다
+ *      3. Acceptance criteria : 인수테스트 내용을 작성할 때
+ *          - Given : 어떤 상황이 주어졌을 때
+ *          - When : 어떤 행동을 하면
+ *          - then : 어떻게 될것이다
  */
 
 package com.study.junit5.user;
@@ -35,13 +48,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserServiceTest {
 
 // 필드에 @Mock 애노테이션을 사용할 수 있고
@@ -161,5 +180,24 @@ class UserServiceTest {
         userRepository.findById(1L);
 
         verifyNoMoreInteractions(userService);
+    }
+
+    @Test
+    void testMockitoBDD() {
+        UserRepository userRepository = mock(UserRepository.class);
+        UserService userService = mock(UserService.class);
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@email.com");
+
+        // given ( BDDMockito library )
+        given(userService.findUser(1L)).willReturn(user);
+
+        // when
+        userService.checkUser(1L);
+
+        // then ( BDDMockito library )
+        then(userService).should(times(1)).checkUser(1L);
     }
 }
