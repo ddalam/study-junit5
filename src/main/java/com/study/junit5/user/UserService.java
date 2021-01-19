@@ -12,6 +12,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User findUser(Long id) {
+        checkUser(1L);
         Optional<User> user = userRepository.findById(id);
 
         return user.orElseThrow(() -> new IllegalArgumentException("가입되지 않은 사용자입니다"));

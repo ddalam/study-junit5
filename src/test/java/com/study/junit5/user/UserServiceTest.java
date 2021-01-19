@@ -21,6 +21,9 @@
  *          - 메서드가 리턴하는게 있을 때 → testStubbingCase1() 참고
  *          - void 메서드의 경우 → testStubbingCase2() 참고
  *          - 메서드가 동일한 매개변수로 호출되더라도 호출되는 순서에 따라 다르게 행동하도록 → testStubbingCase3() 참고
+ *
+ * Mock 객체가 어떻게 사용이 됐는지 확인
+ *  1. 특정 메서드가 특정 파라미터로 최소 한번은 호출되었는지 확인. 호출되지 않았다면 에러 - testVerifyMockCase1() 참고
  */
 
 package com.study.junit5.user;
@@ -52,7 +55,6 @@ class UserServiceTest {
         assertNotNull(userService);
     }
 
-
     @Test
     void testStubbingCase1() {
         UserService userService = mock(UserService.class);
@@ -78,7 +80,6 @@ class UserServiceTest {
         });
     }
 
-
     @Test
     void testStubbingCase2() {
         UserService userService = mock(UserService.class);
@@ -95,7 +96,6 @@ class UserServiceTest {
 
         userService.checkUser(2L);
     }
-
 
     @Test
     void testStubbingCase3() {
@@ -121,5 +121,18 @@ class UserServiceTest {
 
         // 세번째 호출할 때
         assertEquals(Optional.empty(), userRepository.findById(3L));
+    }
+
+    @Test
+    void testVerifyMockCase1() {
+        UserService userService = mock(UserService.class);
+
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("test@email.com");
+
+        when(userService.findUser(1L)).thenReturn(user);
+
+        verify(userService, times(1)).checkUser(1L);
     }
 }
